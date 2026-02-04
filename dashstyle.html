@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>User Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="header">
+    User Dashboard
+</div>
+
+<div class="container">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <a href="#">Dashboard</a>
+        <a href="#">Profile Settings</a>
+        <a href="#">Add Product</a>
+        <a href="#">Logout</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+
+        <!-- Profile Settings -->
+        <div class="card">
+            <h2>Profile Settings</h2>
+            <form>
+                <label>Full Name</label>
+                <input type="text" placeholder="Enter your name">
+
+                <label>Email</label>
+                <input type="email" placeholder="Enter your email">
+
+                <label>Password</label>
+                <input type="password" placeholder="Enter new password">
+
+                <button type="submit">Update Profile</button>
+            </form>
+        </div>
+
+        <!-- Add Product -->
+        <div class="card">
+            <h2>Add Product</h2>
+            <form>
+                <label>Product Name</label>
+                <input type="text" placeholder="Product name">
+
+                <label>Price</label>
+                <input type="number" placeholder="Product price">
+
+                <label>Description</label>
+                <textarea rows="4" placeholder="Product description"></textarea>
+
+                <button type="submit">Add Product</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

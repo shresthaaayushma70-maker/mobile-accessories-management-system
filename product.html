@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add Product - Mobile Accessories</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 30px 20px;
+        }
+        
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-header h2 {
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .form-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .form-group label {
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .form-control {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .preview-img {
+            max-width: 100%;
+            max-height: 250px;
+            object-fit: cover;
+            margin-top: 15px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            display: none;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 20px;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .file-input-label:hover {
+            background: #f0f0ff;
+            border-color: #764ba2;
+        }
+        
+        .file-input-label i {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        #image {
+            display: none;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn-submit {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-reset {
+            flex: 1;
+            background: #e0e0e0;
+            color: #333;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-reset:hover {
+            background: #d0d0d0;
+        }
+        
+        .back-btn {
+            display: block;
+            text-align: center;
+            background: #27ae60;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            margin-top: 15px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .back-btn:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-header">
+            <h2>📱 Add Mobile Accessory</h2>
+            <p>Fill in the details below to add a new product</p>
+        </div>
+        
+        <form action="product.php" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name">Product Name <span style="color: red;">*</span></label>
+                <input type="text" class="form-control" name="name" id="name" 
+                       placeholder="Enter product name (e.g., iPhone 13 Case)" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="category">Category <span style="color: red;">*</span></label>
+                <select class="form-control" name="category" id="category" required>
+                    <option value="">-- Select Category --</option>
+                    <option value="Mobile Covers">Mobile Covers</option>
+                    <option value="Chargers">Chargers</option>
+                    <option value="Headphones">Headphones / Earphones</option>
+                    <option value="Power Banks">Power Banks</option>
+                    <option value="Screen Protectors">Screen Protectors</option>
+                    <option value="Cables">Cables</option>
+                    <option value="Memory Cards">Memory Cards</option>
+                    <option value="Other Accessories">Other Accessories</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="price">Price (₹) <span style="color: red;">*</span></label>
+                <input type="number" class="form-control" name="price" id="price" 
+                       step="0.01" placeholder="Enter price" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="quantity">Quantity <span style="color: red;">*</span></label>
+                <input type="number" class="form-control" name="quantity" id="quantity" 
+                       placeholder="Enter quantity" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Product Image <span style="color: red;">*</span></label>
+                <div class="file-input-wrapper">
+                    <label class="file-input-label" for="image">
+                        <i class="fas fa-cloud-upload-alt"></i><br>
+                        Click to upload or drag and drop<br>
+                        <small>PNG, JPG, GIF up to 10MB</small>
+                    </label>
+                    <input type="file" class="form-control" name="image" id="image" 
+                           accept="image/*" required onchange="previewImage(event)">
+                </div>
+                <img id="preview" class="preview-img" alt="Image preview">
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea class="form-control" name="description" id="description" 
+                          placeholder="Enter product description (optional)"></textarea>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-plus"></i> Add Product
+                </button>
+                <button type="reset" class="btn-reset" onclick="clearPreview()">
+                    <i class="fas fa-redo"></i> Clear
+                </button>
+            </div>
+            
+            <a href="dashboard.php" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </form>
+    </div>
+    
+    <script>
+        function previewImage(event) {
+            const preview = document.getElementById('preview');
+            const file = event.target.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function clearPreview() {
+            const preview = document.getElementById('preview');
+            preview.src = '';
+            preview.style.display = 'none';
+            document.getElementById('image').value = '';
+        }
+        
+        // Drag and drop
+        const fileInput = document.getElementById('image');
+        const fileLabel = document.querySelector('.file-input-label');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileLabel.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight(e) {
+            fileLabel.style.background = '#f0f0ff';
+        }
+        
+        function unhighlight(e) {
+            fileLabel.style.background = '#f8f9fa';
+        }
+        
+        fileLabel.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            
+            const event = new Event('change', { bubbles: true });
+            fileInput.dispatchEvent(event);
+        }
+    </script>
+</body>
+</html>
