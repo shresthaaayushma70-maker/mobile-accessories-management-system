@@ -1,5 +1,11 @@
 <?php
 
+session_start();
+
+// Logout any existing session to show clean registration page
+session_destroy();
+session_start();
+
 require_once "config.php";
 
 $username = $email = $phone = $dob = $password = $confirm_password = "";
@@ -199,6 +205,12 @@ mysqli_close($conn);
             color: #667eea;
             text-decoration: none;
             font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .login-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
         }
         
         .alert {
