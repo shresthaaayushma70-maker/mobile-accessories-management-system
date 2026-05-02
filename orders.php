@@ -7,10 +7,52 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 }
 
 require_once "config.php";
+require_once "notification_service.php";
 
 $user_id = $_SESSION['user_id'];
+
+// Handle AJAX update check request
+if (isset($_GET['check_updates']) && $_GET['check_updates'] == 1) {
+    $unread_count = get_unread_notifications_count($conn, $user_id);
+    // Get latest notification timestamp for this user
+    $sql = "SELECT MAX(created_at) as last_notif FROM notifications WHERE user_id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    $last_notif = null;
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "i", $user_id);
+        mysqli_stmt_execute($stmt);
+        $res = mysqli_stmt_get_result($stmt);
+        $row = mysqli_fetch_assoc($res);
+        $last_notif = $row['last_notif'];
+        mysqli_stmt_close($stmt);
+    }
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
+        'notification_count' => intval($unread_count),
+        'last_notification_at' => $last_notif
+    ]);
+    mysqli_close($conn);
+    exit;
+}
+
+$unread_count = get_unread_notifications_count($conn, $user_id);
+$recent_notifications = get_user_notifications($conn, $user_id, 5, 0);
 $username = htmlspecialchars($_SESSION['username']);
 $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+
+// Get last notification timestamp for initial page load
+$last_notification_at = null;
+$sql_last = "SELECT MAX(created_at) as last_notif FROM notifications WHERE user_id = ?";
+$stmt_last = mysqli_prepare($conn, $sql_last);
+if ($stmt_last) {
+    mysqli_stmt_bind_param($stmt_last, "i", $user_id);
+    mysqli_stmt_execute($stmt_last);
+    $res_last = mysqli_stmt_get_result($stmt_last);
+    $row_last = mysqli_fetch_assoc($res_last);
+    $last_notification_at = $row_last['last_notif'];
+    mysqli_stmt_close($stmt_last);
+}
 
 // Get success/error messages
 $success_msg = '';
@@ -56,9 +98,10 @@ $orders_result = mysqli_stmt_get_result($stmt);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php echo $is_admin ? 'All Orders' : 'My Orders'; ?> - Mobile Accessories</title>
+    <title><?php echo $is_admin ? 'All Orders' : 'My Orders'; ?> - Bazario</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="BAZARIO_STYLES.css">
     <style>
         * {
             margin: 0;
@@ -72,8 +115,8 @@ $orders_result = mysqli_stmt_get_result($stmt);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .navbar {
+            background: linear-gradient(135deg, #001a33 0%, #003366 100%);
             color: white;
             padding: 20px;
             text-align: center;
@@ -89,7 +132,7 @@ $orders_result = mysqli_stmt_get_result($stmt);
         
         .sidebar {
             width: 250px;
-            background: #2c3e50;
+            background: #001a33;
             padding: 20px 0;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             position: fixed;
@@ -113,8 +156,8 @@ $orders_result = mysqli_stmt_get_result($stmt);
         }
         
         .sidebar a:hover, .sidebar button:hover {
-            background: #34495e;
-            border-left-color: #667eea;
+            background: #003366;
+            border-left-color: #3498db;
             padding-left: 30px;
         }
         
@@ -139,8 +182,8 @@ $orders_result = mysqli_stmt_get_result($stmt);
         }
         
         .sidebar-logout-btn:hover {
-            background: #34495e;
-            border-left-color: #dc3545;
+            background: #003366;
+            border-left-color: #e74c3c;
             padding-left: 30px;
         }
         
@@ -514,23 +557,49 @@ $orders_result = mysqli_stmt_get_result($stmt);
                 <i class="fas fa-mobile-alt"></i> Mobile Accessories
             </span>
             <div class="nav-links">
-                <a href="admin_dashboard.php">
-                    <i class="fas fa-home"></i> Dashboard
-                </a>
-                <a href="profile.php">
-                    <i class="fas fa-user-circle"></i> Profile
-                </a>
-                <form action="logout.php" method="POST" style="margin: 0; display: inline;">
-                    <button type="submit" class="logout-btn">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </button>
-                </form>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <!-- Notification Bell -->
+                    <div style="position: relative;">
+                        <a href="notifications.php" style="color: white; text-decoration: none; position: relative;">
+                            <i class="fas fa-bell"></i>
+                            <?php if (!empty($unread_count) && $unread_count > 0): ?>
+                                <span style="position: absolute; top: -6px; right: -10px; background: #e74c3c; color: white; font-size: 11px; padding: 2px 6px; border-radius: 12px;"><?php echo (int)$unread_count; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </div>
+
+                    <a href="admin_dashboard.php">
+                        <i class="fas fa-home"></i> Dashboard
+                    </a>
+                    <a href="profile.php">
+                        <i class="fas fa-user-circle"></i> Profile
+                    </a>
+                    <form action="logout.php" method="POST" style="margin: 0; display: inline;">
+                        <button type="submit" class="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </form>
+                </div>
             </div>
         </nav>
     <?php else: ?>
         <!-- Header for Regular Users -->
-        <div class="header">
-            <i class="fas fa-mobile-alt"></i> Mobile Accessories
+        <div class="header" style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-mobile-alt"></i> Mobile Accessories
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <!-- Notification Bell -->
+                <a href="notifications.php" style="color: white; text-decoration: none; position: relative;">
+                    <i class="fas fa-bell" style="font-size: 18px;"></i>
+                    <?php if (!empty($unread_count) && $unread_count > 0): ?>
+                        <span style="position: absolute; top: -6px; right: -10px; background: #e74c3c; color: white; font-size: 11px; padding: 2px 6px; border-radius: 12px;"><?php echo (int)$unread_count; ?></span>
+                    <?php endif; ?>
+                </a>
+                <a href="profile.php" style="color: white; text-decoration: none;">
+                    <i class="fas fa-user-circle" style="font-size: 18px;"></i>
+                </a>
+            </div>
         </div>
         
         <!-- Sidebar for Regular Users -->
@@ -731,6 +800,94 @@ $orders_result = mysqli_stmt_get_result($stmt);
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <script>
+        // Real-time status update checker
+        let lastNotificationCount = <?php echo $unread_count; ?>;
+        let lastNotificationAt = <?php echo json_encode($last_notification_at); ?>;
+        let updateCheckInterval = null;
+        
+        function checkForStatusUpdates() {
+            fetch('<?php echo $_SERVER['PHP_SELF']; ?>?check_updates=1', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                cache: 'no-store'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data || !data.success) return;
+
+                // Prefer detecting by latest notification timestamp
+                if (data.last_notification_at && (!lastNotificationAt || data.last_notification_at > lastNotificationAt)) {
+                    lastNotificationAt = data.last_notification_at;
+                    lastNotificationCount = data.notification_count || lastNotificationCount;
+                    showUpdateNotification('New order status update! Refreshing page...');
+                    setTimeout(() => { location.reload(); }, 1500);
+                    return;
+                }
+
+                // Fallback: detect by unread count
+                if (data.notification_count > lastNotificationCount) {
+                    lastNotificationCount = data.notification_count;
+                    showUpdateNotification('New order status update! Refreshing page...');
+                    setTimeout(() => { location.reload(); }, 1500);
+                }
+            })
+            .catch(error => console.log('Update check error:', error));
+        }
+        
+        function showUpdateNotification(message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-info alert-dismissible fade show';
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '70px';
+            alertDiv.style.left = '0';
+            alertDiv.style.right = '0';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.style.margin = '0';
+            alertDiv.style.borderRadius = '0';
+            alertDiv.innerHTML = `
+                <div class="container">
+                    <i class="fas fa-bell"></i> <strong>Update!</strong> ${message}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            `;
+            document.body.insertBefore(alertDiv, document.body.firstChild);
+            
+            // Auto dismiss after 10 seconds
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 10000);
+        }
+        
+        // Start checking for updates every 5 seconds
+        function startUpdateChecks() {
+            // Check immediately on page load
+            checkForStatusUpdates();
+            
+            // Then check every 5 seconds
+            updateCheckInterval = setInterval(checkForStatusUpdates, 5000);
+        }
+        
+        // Stop checking when page is unloaded
+        window.addEventListener('beforeunload', function() {
+            if (updateCheckInterval) {
+                clearInterval(updateCheckInterval);
+            }
+        });
+        
+        // Start checking when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            startUpdateChecks();
+        });
+    </script>
 </body>
 </html>
 

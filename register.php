@@ -115,112 +115,10 @@ mysqli_close($conn);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Register - Mobile Accessories</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .register-container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            padding: 40px;
-            max-width: 500px;
-            margin: 40px auto;
-            animation: slideIn 0.5s ease;
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .register-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .register-header h2 {
-            color: #333;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-        
-        .form-group label {
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .form-control {
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 10px 12px;
-            font-size: 14px;
-        }
-        
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        
-        .text-danger {
-            font-size: 12px;
-            margin-top: 5px;
-        }
-        
-        .btn-register {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            font-weight: 600;
-            width: 100%;
-            color: white;
-            margin-top: 20px;
-        }
-        
-        .btn-register:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-        
-        .login-link {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #666;
-        }
-        
-        .login-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .login-link a:hover {
-            color: #764ba2;
-            text-decoration: underline;
-        }
-        
-        .alert {
-            border-radius: 8px;
-            border: none;
-        }
-    </style>
+    <link rel="stylesheet" href="BAZARIO_STYLES.css?v=2">
 </head>
-<body>
-    <div class="register-container">
+<body class="login-page">
+    <div class="login-container">
         <div class="register-header">
             <h2>📱 Mobile Accessories</h2>
             <p>Create your account</p>
@@ -270,7 +168,7 @@ mysqli_close($conn);
                 </div>
             </div>
             
-            <button type="submit" class="btn btn-register">Register</button>
+            <button type="submit" class="btn btn-login">Register</button>
         </form>
         
         <div class="login-link">

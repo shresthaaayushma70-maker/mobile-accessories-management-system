@@ -8,6 +8,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 }
 
 require_once "config.php";
+require_once "notification_service.php";
 
 $username = htmlspecialchars($_SESSION['username']);
 $user_id = $_SESSION['user_id'];
@@ -20,6 +21,10 @@ mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 $user = mysqli_fetch_assoc($result);
 mysqli_stmt_close($stmt);
+
+// Get notifications
+$unread_count = get_unread_notifications_count($conn, $user_id);
+$recent_notifications = get_user_notifications($conn, $user_id, 5, 0);
 
 // Fetch all products
 $sql = "SELECT * FROM product ORDER BY id DESC";
@@ -40,9 +45,10 @@ while ($row = $result->fetch_assoc()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Shop - Mobile Accessories</title>
+    <title>Shop - Bazario</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="BAZARIO_STYLES.css">
     <style>
         * {
             margin: 0;
@@ -56,8 +62,8 @@ while ($row = $result->fetch_assoc()) {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .navbar {
+            background: linear-gradient(135deg, #001a33 0%, #003366 100%);
             color: white;
             padding: 20px;
             text-align: center;
@@ -73,7 +79,7 @@ while ($row = $result->fetch_assoc()) {
         
         .sidebar {
             width: 250px;
-            background: #2c3e50;
+            background: #001a33;
             padding: 20px 0;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             position: fixed;
@@ -97,8 +103,8 @@ while ($row = $result->fetch_assoc()) {
         }
         
         .sidebar a:hover, .sidebar button:hover {
-            background: #34495e;
-            border-left-color: #667eea;
+            background: #003366;
+            border-left-color: #3498db;
             padding-left: 30px;
         }
         
@@ -111,7 +117,7 @@ while ($row = $result->fetch_assoc()) {
             margin-left: 250px;
             padding: 0;
             flex: 1;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: #f8f9fa;
         }
         
         .sidebar-logout-btn {
@@ -130,8 +136,8 @@ while ($row = $result->fetch_assoc()) {
         }
         
         .sidebar-logout-btn:hover {
-            background: #34495e;
-            border-left-color: #dc3545;
+            background: #003366;
+            border-left-color: #e74c3c;
             padding-left: 30px;
         }
         
@@ -242,7 +248,7 @@ while ($row = $result->fetch_assoc()) {
         
         .product-category {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #3498db;
             color: white;
             padding: 4px 12px;
             border-radius: 20px;
@@ -283,14 +289,14 @@ while ($row = $result->fetch_assoc()) {
         .product-price {
             font-size: 22px;
             font-weight: 700;
-            color: #667eea;
+            color: #27ae60;
             margin-bottom: 15px;
         }
         
         .btn-shop {
             display: block;
             width: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #001a33;
             color: white;
             border: none;
             padding: 12px;
@@ -304,7 +310,7 @@ while ($row = $result->fetch_assoc()) {
         
         .btn-shop:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 25px rgba(0, 26, 51, 0.4);
             color: white;
             text-decoration: none;
         }
@@ -359,8 +365,56 @@ while ($row = $result->fetch_assoc()) {
 </head>
 <body>
     <!-- Header -->
-    <div class="header">
-        <i class="fas fa-mobile-alt"></i> Mobile Accessories Store
+    <div class="navbar">
+        <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
+            <i class="fas fa-shopping-bag" style="font-size: 28px;"></i>
+            <span class="navbar-brand" style="margin: 0;">BAZARIO</span>
+            <span style="opacity: 0.9; font-size: 12px; margin-left: 12px;">Online Shopping Store</span>
+
+            <div style="margin-left: auto; display: flex; align-items: center; gap: 12px;">
+                <!-- Notification Bell -->
+                <div style="position: relative;">
+                    <a href="notifications.php" style="color: white; text-decoration: none; position: relative;">
+                        <i class="fas fa-bell" style="font-size: 18px;"></i>
+                        <?php if (!empty($unread_count) && $unread_count > 0): ?>
+                            <span style="position: absolute; top: -6px; right: -10px; background: #e74c3c; color: white; font-size: 11px; padding: 2px 6px; border-radius: 12px;"><?php echo (int)$unread_count; ?></span>
+                        <?php endif; ?>
+                    </a>
+                </div>
+
+                <!-- Quick dropdown (desktop) -->
+                <div style="position: relative;">
+                    <div style="background: transparent; color: white;">
+                        <div style="position: absolute; right: 0; top: 36px; width: 320px; background: white; color: #333; border-radius: 6px; box-shadow: 0 6px 18px rgba(0,0,0,0.12); display: none; z-index: 50;" id="notif-dropdown">
+                            <div style="padding: 12px; border-bottom: 1px solid #eee; font-weight: 700;">Recent notifications</div>
+                            <div style="max-height: 260px; overflow: auto;">
+                                <?php if (!empty($recent_notifications)): ?>
+                                    <?php foreach ($recent_notifications as $rn): ?>
+                                        <div style="padding: 10px 12px; border-bottom: 1px solid #f5f5f5; display: flex; justify-content: space-between; align-items: center;">
+                                            <div style="flex: 1; margin-right: 8px;">
+                                                <div style="font-weight: 600; color: #001a33; font-size: 13px;"><?php echo htmlspecialchars($rn['title']); ?></div>
+                                                <div style="font-size: 12px; color: #666;"><?php echo htmlspecialchars($rn['message']); ?></div>
+                                            </div>
+                                            <div style="font-size: 11px; color: #999;">
+                                                <?php echo date('M d', strtotime($rn['created_at'])); ?>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div style="padding: 14px; text-align: center; color: #999;">No recent notifications</div>
+                                <?php endif; ?>
+                            </div>
+                            <div style="padding: 8px; text-align: center;"><a href="notifications.php">View all</a></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile quick link -->
+                <a href="profile.php" style="color: white; text-decoration: none;">
+                    <i class="fas fa-user-circle" style="font-size: 18px;"></i>
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- Main Container with Sidebar -->

@@ -21,9 +21,10 @@ while ($row = $result->fetch_assoc()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin Dashboard - Mobile Accessories</title>
+    <title>Admin Dashboard - Bazario</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="BAZARIO_STYLES.css">
     <style>
         * {
             margin: 0;
@@ -32,18 +33,22 @@ while ($row = $result->fetch_assoc()) {
         }
         
         body {
-            background-color: #f8f9fa;
+            background-color: #f5f5f5;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .navbar {
+            background: linear-gradient(135deg, #001a33 0%, #003366 100%);
             color: white;
-            padding: 20px;
-            text-align: center;
+            padding: 15px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
             font-size: 24px;
             font-weight: 700;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            letter-spacing: 2px;
+            color: white;
         }
         
         .container-main {
@@ -53,7 +58,7 @@ while ($row = $result->fetch_assoc()) {
         
         .sidebar {
             width: 250px;
-            background: #2c3e50;
+            background: #001a33;
             padding: 20px 0;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
             position: fixed;
@@ -64,8 +69,8 @@ while ($row = $result->fetch_assoc()) {
         .sidebar a, .sidebar button {
             display: block;
             width: 100%;
-            color: #ecf0f1;
-            padding: 15px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 14px 20px;
             text-decoration: none;
             transition: all 0.3s;
             border-left: 4px solid transparent;
@@ -76,14 +81,15 @@ while ($row = $result->fetch_assoc()) {
         }
         
         .sidebar a:hover, .sidebar button:hover {
-            background: #34495e;
-            border-left-color: #667eea;
-            padding-left: 30px;
+            background: #003366;
+            border-left-color: #3498db;
+            color: white;
+            padding-left: 24px;
         }
         
         .sidebar a i, .sidebar button i {
-            margin-right: 10px;
-            width: 20px;
+            margin-right: 12px;
+            width: 18px;
         }
         
         .content {
@@ -95,7 +101,7 @@ while ($row = $result->fetch_assoc()) {
         .section-title {
             font-size: 28px;
             font-weight: 700;
-            color: #333;
+            color: #001a33;
             margin-bottom: 30px;
             display: flex;
             justify-content: space-between;
@@ -103,7 +109,7 @@ while ($row = $result->fetch_assoc()) {
         }
         
         .btn-add {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #001a33;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -113,24 +119,26 @@ while ($row = $result->fetch_assoc()) {
         }
         
         .btn-add:hover {
+            background: #003366;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(0, 26, 51, 0.4);
             color: white;
             text-decoration: none;
         }
         
         .product-card {
             background: white;
-            border-radius: 10px;
+            border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            border: 1px solid #e0e0e0;
         }
         
         .product-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
         
         .product-image {
@@ -146,7 +154,7 @@ while ($row = $result->fetch_assoc()) {
         }
         
         .product-info h5 {
-            color: #333;
+            color: #001a33;
             margin-bottom: 8px;
         }
         
@@ -158,7 +166,7 @@ while ($row = $result->fetch_assoc()) {
         
         .product-price {
             font-size: 20px;
-            color: #667eea;
+            color: #27ae60;
             font-weight: bold;
             margin: 10px 0;
         }
@@ -171,7 +179,7 @@ while ($row = $result->fetch_assoc()) {
         }
         
         .btn-edit {
-            background: #28a745;
+            background: #001a33;
             color: white;
             border: none;
             padding: 8px 15px;
@@ -182,7 +190,7 @@ while ($row = $result->fetch_assoc()) {
         }
         
         .btn-edit:hover {
-            background: #218838;
+            background: #003366;
             color: white;
         }
         
@@ -207,14 +215,14 @@ while ($row = $result->fetch_assoc()) {
         }
         
         .user-info {
-            color: #ecf0f1;
+            color: rgba(255, 255, 255, 0.8);
             padding: 15px 20px;
-            border-top: 1px solid #34495e;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
             margin-top: auto;
         }
         
         .logout-btn {
-            background: #dc3545;
+            background: #e74c3c;
             color: white;
             padding: 10px 15px;
             border: none;
@@ -226,11 +234,11 @@ while ($row = $result->fetch_assoc()) {
         }
         
         .logout-btn:hover {
-            background: #c82333;
+            background: #c0392b;
         }
         
         .admin-badge {
-            background: #dc3545;
+            background: #3498db;
             color: white;
             padding: 3px 8px;
             border-radius: 3px;
@@ -252,8 +260,12 @@ while ($row = $result->fetch_assoc()) {
     </style>
 </head>
 <body>
-    <div class="header">
-        <i class="fas fa-user-shield"></i> Admin Dashboard - Mobile Accessories
+    <div class="navbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <i class="fas fa-shopping-bag" style="font-size: 28px;"></i>
+            <span class="navbar-brand" style="margin: 0;">BAZARIO</span>
+            <span style="opacity: 0.9; font-size: 12px; margin-left: auto;">Admin Dashboard</span>
+        </div>
     </div>
 
     <div class="container-main">

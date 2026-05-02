@@ -33,6 +33,7 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
 }
 
 require_once "config.php";
+require_once "notification_service.php";
 
 $user_id = $_SESSION['user_id'];
 $product_id = isset($_GET['product_id']) ? (int)$_GET['product_id'] : 0;
@@ -68,36 +69,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $customer_name = sanitize_input($_POST['customer_name']);
     $customer_email = sanitize_input($_POST['customer_email']);
     $customer_phone = sanitize_input($_POST['customer_phone']);
-    $house_number = sanitize_input($_POST['house_number']);
     $street = sanitize_input($_POST['street']);
     $city = sanitize_input($_POST['city']);
     $state = sanitize_input($_POST['state']);
     $postal_code = sanitize_input($_POST['postal_code']);
     $country = sanitize_input($_POST['country']);
-    $payment_method = sanitize_input($_POST['payment_method']);
+    $payment_method = 'COD';
     
     // Validation
     if ($quantity <= 0 || $quantity > $product['quantity']) {
         $error_msg = "Invalid quantity. Available stock: " . $product['quantity'];
     } elseif (empty($customer_name) || empty($customer_email) || empty($customer_phone) || 
-              empty($house_number) || empty($street) || empty($city) || empty($state) || 
+              empty($street) || empty($city) || empty($state) || 
               empty($postal_code) || empty($country)) {
         $error_msg = "All address fields are required";
-    } elseif (!in_array($payment_method, ['COD', 'Online'])) {
-        $error_msg = "Invalid payment method selected";
     } else {
         // Generate order number
         $order_number = "ORD" . time() . rand(100, 999);
         $total_amount = $product['price'] * $quantity;
         
         // Insert order
-        $order_sql = "INSERT INTO orders (user_id, order_number, total_amount, customer_name, customer_email, customer_phone, house_number, street, city, state, postal_code, country, payment_method, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')";
+        $order_sql = "INSERT INTO orders (user_id, order_number, total_amount, customer_name, customer_email, customer_phone, street, city, state, postal_code, country, payment_method, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')";
         $order_stmt = mysqli_prepare($conn, $order_sql);
         
         if ($order_stmt === false) {
             $error_msg = "Database error: " . mysqli_error($conn) . "<br><strong>Please ensure the database tables are created by running database_setup.sql</strong>";
         } else {
-            mysqli_stmt_bind_param($order_stmt, "isdssssssssss", $user_id, $order_number, $total_amount, $customer_name, $customer_email, $customer_phone, $house_number, $street, $city, $state, $postal_code, $country, $payment_method);
+            mysqli_stmt_bind_param($order_stmt, "isdsssssssss", $user_id, $order_number, $total_amount, $customer_name, $customer_email, $customer_phone, $street, $city, $state, $postal_code, $country, $payment_method);
             
             if (mysqli_stmt_execute($order_stmt)) {
                 $order_id = mysqli_insert_id($conn);
@@ -119,6 +117,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Log activity
                 log_activity($conn, $user_id, "Order Placed", "Order #" . $order_number . " placed for " . $product['name']);
                 
+                // Create Order Placed notification
+                create_notification($conn, $user_id, $order_id, 'order_placed', "Order Placed!", "Your order #" . $order_number . " has been placed successfully. We will start processing it soon.", "track_order.php?order_id=" . $order_id);
+                
+                // Insert first status history entry
+                $history_stmt = mysqli_prepare($conn, "INSERT INTO order_status_history (order_id, status, note) VALUES (?, ?, ?)");
+                $status_text = "Order Placed";
+                $note = "Order created by customer";
+                mysqli_stmt_bind_param($history_stmt, "iss", $order_id, $status_text, $note);
+                mysqli_stmt_execute($history_stmt);
+                
                 $success_msg = "Order placed successfully! Order #" . $order_number;
                 header("refresh:2;url=orders.php");
             } else {
@@ -135,9 +143,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Checkout - Mobile Accessories</title>
+    <title>Checkout - Bazario</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="BAZARIO_STYLES.css">
     <style>
         body {
             background-color: #f8f9fa;
@@ -170,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             padding: 20px;
             border-radius: 12px;
             margin-bottom: 30px;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #001a33;
         }
         
         .product-summary h4 {
@@ -199,14 +208,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             font-weight: 700;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid #001a33;
             display: flex;
             align-items: center;
         }
         
         .form-section h4 i {
             margin-right: 10px;
-            color: #667eea;
+            color: #001a33;
         }
         
         .form-group label {
@@ -224,12 +233,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         
         .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            border-color: #001a33;
+            box-shadow: 0 0 0 0.2rem rgba(0, 26, 51, 0.25);
         }
         
         .btn-checkout {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #001a33;
             border: none;
             border-radius: 8px;
             padding: 14px;
@@ -242,7 +251,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         .btn-checkout:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 20px rgba(0, 26, 51, 0.3);
+            background: #003366;
         }
         
         .back-link {
@@ -251,7 +261,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         
         .back-link a {
-            color: #667eea;
+            color: #001a33;
             text-decoration: none;
             font-weight: 600;
         }
@@ -279,8 +289,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         
         .custom-radio .custom-control-input:checked ~ .custom-control-label::before {
-            background-color: #667eea;
-            border-color: #667eea;
+            background-color: #001a33;
+            border-color: #001a33;
         }
         
         .custom-control-label {
@@ -305,7 +315,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         
         .custom-radio .custom-control-input:focus ~ .custom-control-label::before {
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            box-shadow: 0 0 0 0.2rem rgba(0, 26, 51, 0.25);
         }
     </style>
 </head>
@@ -382,20 +392,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             <div class="form-section">
                 <h4><i class="fas fa-map-marker-alt"></i> Complete Delivery Address</h4>
-                <p style="color: #888; font-size: 14px; margin-bottom: 20px;">Please enter your complete address including house number, street, city, and other details</p>
+                <p style="color: #888; font-size: 14px; margin-bottom: 20px;">Please enter your complete address including street, city, and other details</p>
                 
-                <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label for="house_number">House Number / Apartment <span style="color: red;">*</span></label>
-                        <input type="text" class="form-control" name="house_number" id="house_number" 
-                               placeholder="e.g., 123, Apt 5B" required>
-                    </div>
-                    
-                    <div class="form-group col-md-8">
-                        <label for="street">Street Address <span style="color: red;">*</span></label>
-                        <input type="text" class="form-control" name="street" id="street" 
-                               placeholder="e.g., Main Street, Gandhi Road" required>
-                    </div>
+                <div class="form-group">
+                    <label for="street">Street Address <span style="color: red;">*</span></label>
+                    <input type="text" class="form-control" name="street" id="street" 
+                           placeholder="e.g., Main Street, Gandhi Road" required>
                 </div>
                 
                 <div class="form-row">
@@ -429,32 +431,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             <div class="form-section">
                 <h4><i class="fas fa-credit-card"></i> Payment Method</h4>
-                
-                <div class="form-group">
-                    <div class="custom-control custom-radio">
-                        <input type="radio" class="custom-control-input" name="payment_method" 
-                               id="payment_cod" value="COD" checked>
-                        <label class="custom-control-label" for="payment_cod">
-                            <strong>Cash on Delivery (COD)</strong>
-                            <span style="display: block; color: #666; font-size: 13px; margin-top: 5px;">
-                                Pay when your order arrives at your doorstep
-                            </span>
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <div class="custom-control custom-radio">
-                        <input type="radio" class="custom-control-input" name="payment_method" 
-                               id="payment_online" value="Online">
-                        <label class="custom-control-label" for="payment_online">
-                            <strong>Online Payment</strong>
-                            <span style="display: block; color: #666; font-size: 13px; margin-top: 5px;">
-                                Pay securely using debit/credit card, net banking, or UPI
-                            </span>
-                        </label>
-                    </div>
-                </div>
+                <p style="color: #27ae60; font-weight: 600; margin-bottom: 15px;">
+                    <i class="fas fa-info-circle"></i> Cash on Delivery (COD)
+                </p>
+                <p style="color: #666; font-size: 14px;">
+                    Your order will be delivered to your address. You can pay when your order arrives at your doorstep.
+                </p>
             </div>
             
             <button type="submit" class="btn btn-checkout">

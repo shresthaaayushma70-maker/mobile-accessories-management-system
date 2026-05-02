@@ -5,17 +5,19 @@
  */
 
 // Database credentials
-define('DB_SERVER', 'localhost');
+define('DB_SERVER', '127.0.0.1');
+define('DB_PORT', 3306);
 define('DB_USERNAME', 'root');
 define('DB_PASSWORD', '');
 define('DB_NAME', 'Mproject');
 
-// Create database connection
-$conn = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
+// Create database connection (use TCP host and explicit port)
+$conn = @mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME, DB_PORT);
 
-// Check connection
+// Check connection and provide clear troubleshooting hints
 if ($conn === false) {
-    die("ERROR: Could not connect to database. " . mysqli_connect_error());
+    $err = mysqli_connect_error();
+    die("ERROR: Could not connect to database. " . $err . "\nHint: Start MySQL (XAMPP Control Panel) and ensure host=127.0.0.1 port=3306 and credentials in config.php are correct.");
 }
 
 // Set charset to utf8mb4 for better security and emoji support

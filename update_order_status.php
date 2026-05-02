@@ -9,13 +9,15 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true ||
 }
 
 require_once "config.php";
+require_once "notification_service.php";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $order_id = (int)$_POST['order_id'];
     $new_status = sanitize_input($_POST['status']);
+    $notes = isset($_POST['notes']) ? sanitize_input($_POST['notes']) : '';
     
-    // Validate status
-    $valid_statuses = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+    // Validate status - updated to match the new statuses
+    $valid_statuses = ['Order Placed', 'Confirmed', 'Processing', 'Packing', 'Out for Delivery', 'Delivered', 'Cancelled'];
     
     if (!in_array($new_status, $valid_statuses)) {
         header("Location: orders.php?error=invalid_status");
@@ -34,16 +36,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit;
     }
     
-    // Update order status
-    $update_sql = "UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
-    $update_stmt = mysqli_prepare($conn, $update_sql);
-    mysqli_stmt_bind_param($update_stmt, "si", $new_status, $order_id);
+    // Use the notification-aware status update function
+    $admin_id = $_SESSION['user_id'];
+    $result = update_order_status($conn, $order_id, $new_status, $admin_id, $notes);
     
-    if (mysqli_stmt_execute($update_stmt)) {
-        // Log activity
-        $user_id = $_SESSION['user_id'];
-        log_activity($conn, $user_id, "Order Status Updated", "Order #" . $order_id . " status updated to " . $new_status);
-        
+    if ($result['success']) {
         header("Location: orders.php?success=status_updated");
         exit;
     } else {
